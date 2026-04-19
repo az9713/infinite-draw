@@ -2,9 +2,11 @@
 
 An infinite-canvas drawing and diagramming app — shapes, arrows that connect them, freehand ink, text, a searchable Lucide icon library, PNG export, and clipboard-paste for screenshots. All projects are stored locally in IndexedDB.
 
-![Infinite Draw canvas with a rocket icon and a pasted screenshot](docs/infinite_draw_demo.mp4)
+![Claude Code Desktop showing the Tasks and Preview panels during the build](./docs/claude_code_desktop.jpg)
 
-> **Demo video:** [docs/infinite_draw_demo.mp4](docs/infinite_draw_demo.mp4) (1.15 MB, ~3 min)
+**Demo video** — every feature in action:
+
+https://github.com/user-attachments/assets/44f7656a-9846-4a57-a05e-79368f6c375c
 
 ---
 
