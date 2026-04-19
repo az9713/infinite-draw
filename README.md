@@ -41,6 +41,12 @@ The entire project was built in a single Claude Code session. See [Build notes](
 
 All data lives on your device. There is no backend, no account, no sync.
 
+### Diagram templates
+
+Press `P` (or click **Templates** in the top bar) to drop a ready-made starter onto the canvas — flowcharts, sequence diagrams, system architectures, microservices, mind maps, kanban boards, org charts, and SWOT matrices. Every template is real tldraw shapes with pre-wired arrow bindings, so connectors follow their endpoints when you move things around. Below: four templates from the library sharing a single canvas.
+
+![Four Infinite Draw templates on one canvas: microservices, system architecture, a flowchart, and a kanban board](./docs/templates.jpg)
+
 ---
 
 ## Quick start
@@ -151,6 +157,7 @@ infinite_draw/
 │       └── CanvasPage.tsx    # tldraw + toolbar overlay
 ├── docs/
 │   ├── claude_code_desktop.jpg  # README hero: Tasks + Preview panels
+│   ├── templates.jpg            # Templates-library showcase
 │   └── infinite_draw_demo.mp4   # Full feature walkthrough
 ├── .claude/
 │   └── launch.json           # Claude Code Desktop dev-server config
