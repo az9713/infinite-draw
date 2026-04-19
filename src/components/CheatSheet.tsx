@@ -21,6 +21,7 @@ const SECTIONS: Section[] = [
     title: 'Infinite Draw',
     shortcuts: [
       { keys: ['I'], label: 'Open icon picker' },
+      { keys: ['P'], label: 'Insert diagram template' },
       { keys: ['N'], label: 'New canvas' },
       { keys: ['⌘/Ctrl', 'E'], label: 'Export page as PNG' },
       { keys: ['⌘/Ctrl', '⇧', 'E'], label: 'Export selection as PNG' },

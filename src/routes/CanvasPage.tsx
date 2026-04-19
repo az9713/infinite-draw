@@ -21,15 +21,18 @@ import {
   ArrowLeft,
   Download,
   Keyboard,
+  LayoutTemplate,
   Pencil,
   Shapes,
 } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 import { IconPickerModal } from '@/components/IconPickerModal'
 import { CheatSheet } from '@/components/CheatSheet'
+import { TemplatePickerModal } from '@/components/TemplatePickerModal'
 import { IconShapeUtil } from '@/shapes/IconShapeUtil'
 import { getProject, renameProject, saveSnapshot } from '@/lib/projects'
 import type { Project } from '@/db'
+import type { DiagramTemplate } from '@/templates'
 
 const SHAPE_UTILS = [IconShapeUtil]
 
@@ -42,6 +45,7 @@ export default function CanvasPage() {
   const [editingName, setEditingName] = useState(false)
   const [saving, setSaving] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [iconPickerOpen, setIconPickerOpen] = useState(false)
+  const [templatePickerOpen, setTemplatePickerOpen] = useState(false)
   const [cheatSheetOpen, setCheatSheetOpen] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
@@ -178,6 +182,44 @@ export default function CanvasPage() {
     showToast(`Inserted ${iconName}`)
   }, [showToast])
 
+  // Drop a ready-made diagram template onto the canvas, auto-selected so the
+  // user can immediately move it or tweak labels.
+  const insertTemplate = useCallback(
+    (template: DiagramTemplate) => {
+      const editor = editorRef.current
+      if (!editor) return
+      const center = editor.getViewportPageBounds().center
+      const { shapes, bindings } = template.build({
+        center: { x: center.x, y: center.y },
+        newId: () => createShapeId(),
+      })
+      editor.run(() => {
+        editor.createShapes(shapes)
+        if (bindings && bindings.length > 0) {
+          editor.createBindings(
+            bindings.map((b) => ({
+              type: 'arrow',
+              fromId: b.fromId,
+              toId: b.toId,
+              props: {
+                terminal: b.terminal,
+                normalizedAnchor: b.anchor ?? { x: 0.5, y: 0.5 },
+                isExact: false,
+                isPrecise: b.isPrecise ?? false,
+              },
+            })),
+          )
+        }
+        const ids = shapes
+          .map((s) => s.id)
+          .filter((id): id is NonNullable<typeof id> => Boolean(id))
+        if (ids.length > 0) editor.select(...ids)
+      })
+      showToast(`Inserted "${template.name}"`)
+    },
+    [showToast],
+  )
+
   // PNG export (page or selection).
   const exportPng = useCallback(
     async (selectionOnly: boolean) => {
@@ -262,6 +304,18 @@ export default function CanvasPage() {
         // tldraw doesn't use plain "I" for anything, safe to claim.
         e.preventDefault()
         setIconPickerOpen(true)
+        return
+      }
+
+      // P — template picker (tldraw doesn't bind plain "P")
+      if (
+        (e.key === 'p' || e.key === 'P') &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        !e.altKey
+      ) {
+        e.preventDefault()
+        setTemplatePickerOpen(true)
         return
       }
     }
@@ -379,6 +433,15 @@ export default function CanvasPage() {
           </button>
           <button
             className="btn-ghost !px-2.5 !py-1.5"
+            title="Insert template (P)"
+            onClick={() => setTemplatePickerOpen(true)}
+          >
+            <LayoutTemplate size={14} />
+            <span className="hidden lg:inline">Templates</span>
+            <span className="kbd hidden sm:inline-flex">P</span>
+          </button>
+          <button
+            className="btn-ghost !px-2.5 !py-1.5"
             title="Export PNG (⌘/Ctrl+E)"
             onClick={() => exportPng(false)}
           >
@@ -418,6 +481,11 @@ export default function CanvasPage() {
         open={iconPickerOpen}
         onClose={() => setIconPickerOpen(false)}
         onSelect={insertIcon}
+      />
+      <TemplatePickerModal
+        open={templatePickerOpen}
+        onClose={() => setTemplatePickerOpen(false)}
+        onSelect={insertTemplate}
       />
       <CheatSheet
         open={cheatSheetOpen}
