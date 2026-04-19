@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Local env / editor
+.env
+.env.local
+.env.*.local
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Claude Code local state (launch.json is committed; lock files are not)
+.claude/scheduled_tasks.lock
+.claude/settings.local.json
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Large / pre-compressed demo asset (superseded by infinite_draw_demo.mp4)
+docs/inifinite_draw_demo.mp4
