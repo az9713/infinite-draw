@@ -29,11 +29,14 @@ The entire project was built in a single Claude Code session. See [Build notes](
 |---|---|
 | 🎨 **Infinite canvas** with pan, zoom, and all the basic shapes (rect, ellipse, line, arrow, freehand, text) | Powered by the [`tldraw`](https://tldraw.dev) SDK |
 | 🔗 **Arrows that snap to shapes** — true diagramming, not just overlaid lines | Native tldraw binding |
-| 🎯 **Lucide icon library** — 1,534 icons, searchable, inserted as first-class canvas shapes (resize, recolor, rotate) | Custom `IconShape` via `ShapeUtil` |
+| 🎯 **Lucide icon library** — 1,534 icons (popular 103 shown first, everything searchable) dropped onto the canvas as first-class shapes: resize with aspect-ratio lock, and recolor via the same tldraw color picker used for every other shape | Custom `IconShape` registered with `DefaultColorStyle` |
+| 📐 **Diagram templates** — 8 ready-made starters (flowchart, sequence, system architecture, microservices, mind map, kanban, org chart, SWOT) dropped at viewport center with arrow bindings pre-wired, so connectors stay attached as you move pieces. The whole template is inserted in a single `editor.run()` — `Ctrl+Z` removes it atomically | `src/templates/`, `TemplatePickerModal` |
 | 🖼️ **Paste screenshots** straight from the clipboard | Native `ClipboardEvent` → tldraw image shape |
-| 💾 **Multi-project** with autosave, rename, delete, thumbnails | IndexedDB via [Dexie](https://dexie.org) |
-| 📤 **PNG export** — full page or selection, 2× scale | `editor.toImage()` |
-| ⌨️ **Power-user shortcuts** for every feature, with a `?` cheat-sheet | Layered over tldraw's own keymap |
+| 💾 **Multi-project** home screen — grid of project cards with live thumbnails, inline rename, delete, and a search box | IndexedDB via [Dexie](https://dexie.org) |
+| ✏️ **Inline canvas rename** — click the project title in the canvas top bar to rename in place | — |
+| 💡 **Autosave with a live status pill** (`Saving…` → `Saved`) and toast feedback on inserts and exports | 700 ms debounced Dexie writes |
+| 📤 **PNG export** — full page or selection, 2× scale, with a download-filename derived from the project name | `editor.toImage()` |
+| ⌨️ **Power-user shortcuts** for every feature, with a `?` cheat-sheet overlay | Layered over tldraw's own keymap |
 | 🌒 **Dark-first, trendy UI** | Tailwind, Inter, zinc/violet palette |
 
 All data lives on your device. There is no backend, no account, no sync.
@@ -72,6 +75,7 @@ App-specific:
 |---|---|
 | `N` | New canvas (on Home) |
 | `I` | Open icon picker |
+| `P` | Open diagram-template picker |
 | `?` | Toggle the keyboard cheat-sheet |
 | `⌘/Ctrl + E` | Export current page as PNG |
 | `⌘/Ctrl + Shift + E` | Export current selection as PNG |
@@ -125,19 +129,35 @@ infinite_draw/
 │   │   └── lucide-catalog.ts # Deduped Lucide catalog + resolver
 │   ├── shapes/
 │   │   └── IconShapeUtil.tsx # Custom tldraw shape for Lucide icons
+│   ├── templates/            # Diagram-template library (see below)
+│   │   ├── index.ts          # Exported catalog
+│   │   ├── types.ts          # DiagramTemplate, BuildContext, etc.
+│   │   ├── helpers.ts        # Shape/arrow factories used by templates
+│   │   ├── flowchart.tsx
+│   │   ├── sequence.tsx
+│   │   ├── system-arch.tsx
+│   │   ├── microservices.tsx
+│   │   ├── mindmap.tsx
+│   │   ├── kanban.tsx
+│   │   ├── org-chart.tsx
+│   │   └── swot.tsx
 │   ├── components/
 │   │   ├── Logo.tsx
 │   │   ├── IconPickerModal.tsx
+│   │   ├── TemplatePickerModal.tsx
 │   │   └── CheatSheet.tsx
 │   └── routes/
 │       ├── HomePage.tsx      # Project grid
 │       └── CanvasPage.tsx    # tldraw + toolbar overlay
 ├── docs/
-│   └── infinite_draw_demo.mp4
+│   ├── claude_code_desktop.jpg  # README hero: Tasks + Preview panels
+│   └── infinite_draw_demo.mp4   # Full feature walkthrough
 ├── .claude/
 │   └── launch.json           # Claude Code Desktop dev-server config
 └── ... (standard Vite/Tailwind config)
 ```
+
+**Adding a template:** implement the `DiagramTemplate` interface from `src/templates/types.ts` (id, name, description, category, `preview()`, `build({ center, newId })`), then add it to the exported `TEMPLATE_CATALOG` in `src/templates/index.ts`. The shared factories in `helpers.ts` cover rectangles, rounded cards, ellipses, arrows with bindings, and icon shapes — most new templates are under 100 lines.
 
 ---
 
@@ -156,7 +176,9 @@ interface Project {
 }
 ```
 
-The canvas autosaves on every document mutation, debounced at 700ms. On each save, tldraw's `editor.toImage()` renders a 0.5× PNG thumbnail that the Home grid displays. A `beforeunload` handler flushes any pending save synchronously.
+The canvas autosaves on every document mutation, debounced at 700 ms. On each save, tldraw's `editor.toImage()` renders a 0.5× PNG thumbnail that the Home grid displays. A `beforeunload` listener flushes a synchronous snapshot-only save if you close the tab mid-edit, and React Router unmounts run a final full flush (snapshot + thumbnail) before navigation.
+
+The live `Saving…` / `Saved` pill in the canvas top bar reflects this pipeline directly, so you can always tell whether your work is persisted.
 
 There are no migrations today. If the `IconShape` schema ever changes, old snapshots will fail validation — plan to add a `ShapeUtil.migrations` entry at that point.
 
